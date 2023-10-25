@@ -48,7 +48,7 @@ def filter_stopwords(df):
             if row in stop_words:
                 df = df.drop(row)
             #remove punctuation
-            elif row in ['.', ',', '?', '!', ':', ';', '"', "'", '(', ')', '[', ']', '{', '}', '-', '\'\'', '``', '\'s']:
+            elif row in ['.', ',', '?', '!', ':', ';', '"', "'", '(', ')', '[', ']', '{', '}', '-', '\'\'', '``', '\'s', '--']:
                 df = df.drop(row)
     except KeyError:
         pass
@@ -60,7 +60,8 @@ def filter_stopwords(df):
 
 #define function epsilon
 def function_epsilon(epsilon):
-    return 1/epsilon
+    name = '1/epsilon'
+    return 1/epsilon #1/f(x) f(x) must be strictly positive and strictly increasing
 
 def compute_density(df, df_sampled, epsilon):
     t_0 = time.time()
@@ -78,7 +79,14 @@ def compute_density(df, df_sampled, epsilon):
         density_results[word] = count
     t_f = time.time() - t_0
     print('Time to compute density: %.2f sec.' % t_f)
+    #save results in a txt file
+    with open('results/density_results.txt', 'w') as f:
+        for word, density in density_results.items():
+            f.write('%s:%s\n' % (word, density))
     return density_results
+
+#dists = np.sqrt(np.sum((dots[:, np.newaxis] - dots) ** 2, axis=2))
+#formula for computing the Euclidean distance between two vectors
 
 # Function to calculate Euclidean distance
 def euclidean_distance(vector1, vector2):
@@ -96,6 +104,30 @@ def plot_density_results(density_results):
     plt.xticks(rotation=45) 
     plt.show()
 
+def save_results(epsilon, density_results):
+    with open ('results/density_results.txt', 'w') as f:
+        f.write('Density of Words\n')
+        f.write('----------------\n')
+        f.write('Epsilon: %s \n' % epsilon)
+        f.write('Function epsilon: %s \n' % function_epsilon(epsilon))
+        f.write('----------------\n')
+        f.write('Words\tDensity\n')
+        for word, density in density_results.items():
+            f.write('%s\t%s\n' % (word, density))
+
+def count_words(df_sampled, df, distances):
+    results = []
+    for word in df_sampled.index:
+        count = 0
+        partial = []
+        for other_word in df.index:
+            for distance in distances:
+                if euclidean_distance(df_sampled.loc[word], df.loc[other_word]) <= distance:
+                   count += 1
+                partial.append((word, count, distance))
+        results.append(partial)
+    return results
+
 def main():
     #read file txt
     lines = read_file('data/glove_6B_50d.txt')
@@ -103,18 +135,31 @@ def main():
     words, vector = save_word_vector(lines)
     #create df of dictionary words and vectors
     df = filter_stopwords(convert_to_dataframe(words, vector))
+    #save df
+    df.to_csv('data/df.csv')
     # sample words
-    df = df.sample(n=100000)
-    df_sampled = df.sample(n=50)
+    df = df.sample(n=100)
+    df_sampled = df.sample(n=5)
+    distances = [1, 5, 7, 8, 10]
+    results = count_words(df_sampled, df, distances)
+    #save in a df
+    print(results)
+
+
+    
+
+    
     #define set of epsilon (remove 0 from epsilons to avoid errors)
-    epsilon = 100
+    #epsilon = 0.2
     #compute function epsilon
-    f_epsilon = function_epsilon(epsilon)
+    #f_epsilon = function_epsilon(epsilon)
+    #print('f_epsilon: %.2f' % f_epsilon)
     #compute density
-    density_results = compute_density(df, df_sampled, f_epsilon)
+    #density_results = compute_density(df, df_sampled, f_epsilon)
     #plot density
-    plot_density_results(density_results)
+    #plot_density_results(density_results)
     #print(density_results)
+    #save_results(epsilon, density_results)
 
 if __name__ == '__main__':
     main()
