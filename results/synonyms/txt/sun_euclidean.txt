@@ -1,0 +1,10 @@
+solarize None
+Dominicus None
+sunbathe 7.085692405700684
+sunlight 4.913812637329102
+solarise None
+Sunday None
+Sun None
+sunshine 4.41004753112793
+insolate None
+Lord's_Day None

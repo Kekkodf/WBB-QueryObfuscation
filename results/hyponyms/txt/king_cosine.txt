@@ -1,0 +1,4 @@
+king_of_england None
+king_of_france None
+king_of_the_germans None
+oil_tycoon None

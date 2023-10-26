@@ -1,0 +1,13 @@
+brain_death None
+necrobiosis None
+rest 0.5380554795265198
+megadeath None
+sudden_infant_death_syndrome None
+martyrdom 0.4425112009048462
+passing 0.4823934733867645
+grave 0.6140657663345337
+fatality 0.453556627035141
+neonatal_death None
+wrongful_death None
+necrosis 0.18492385745048523
+extinction 0.341393381357193

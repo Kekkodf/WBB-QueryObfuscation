@@ -1,0 +1,10 @@
+elevator_car None
+automobile 0.69562166929245
+gondola 0.3910418152809143
+auto 0.6996272206306458
+railway_car None
+cable_car None
+machine 0.6443130373954773
+railcar 0.3260704576969147
+motorcar 0.1702088862657547
+railroad_car None
