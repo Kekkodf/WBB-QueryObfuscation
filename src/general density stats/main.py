@@ -10,7 +10,8 @@ def main():
     #set word
     word = 'tumor'
     #x, counts = count.count_words_euclidean(word, k)
-    x, counts = count.count_words_cosine(word, cos_alpha)
+    #x, counts = count.count_words_cosine(word, cos_alpha)
+    x, counts = count.count_words_mahalanobis(word, k)
     print(word)
     print(counts)
     print('Execution time: %.2f' % (time.time() - t_0))

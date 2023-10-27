@@ -7,7 +7,7 @@ import plot
 import numpy as np
 
 def main():
-    word = 'car'
+    word = 'death'
     embeddings_dict = emb.embeddings_dict
     print('-----------------------------------')
     print('Word: %s'%word)
@@ -25,7 +25,7 @@ def main():
     euclidean_distance_hyponyms = {hyp : eu.euclidean_distance(word, hyp) for hyp in embeddings_hyp.keys()}
 
     #sample from embeddings_dict
-    sample = np.random.choice(list(embeddings_dict.keys()), 1000)
+    sample = np.random.choice(list(embeddings_dict.keys()), 10000)
     #get cosine similarity
     cos_similarity_sample = {wrd : cs.cosine_sim(word, wrd, -1) for wrd in sample}
     #get euclidean distance

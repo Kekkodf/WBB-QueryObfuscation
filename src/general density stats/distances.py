@@ -35,7 +35,12 @@ def count_similar_words_mahalanobis(embedding, k):
     #count similar words using cosine distance
     number_of_words = []
     for word in embeddings_dict.keys():
-        iv = np.linalg.inv(np.cov(embeddings_dict[word], rowvar=False))
+        cov_mat = np.stack((embeddings_dict[word],embedding), axis=0)
+        cov_mat = np.cov(cov_mat, rowvar=False)
+        print(cov_mat)
+        iv = np.linalg.inv(cov_mat)
+        print(iv)
+        raise Exception
         if spatial.distance.mahalanobis(embeddings_dict[word], embedding, iv) <= k:
             number_of_words.append(word)
     return number_of_words
