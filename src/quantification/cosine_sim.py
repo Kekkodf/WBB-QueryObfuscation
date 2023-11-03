@@ -8,4 +8,4 @@ embeddings_dict = emb.embeddings_dict
 def cosine_sim(word1, word2, cos_alpha):
     """Returns cosine similarity between two words"""
     if word2 in embeddings_dict.keys():
-        return math.acos(1-dist.cosine(embeddings_dict[word1], embeddings_dict[word2]))
+        return 1-dist.cosine(embeddings_dict[word1], embeddings_dict[word2])

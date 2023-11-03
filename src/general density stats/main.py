@@ -5,10 +5,10 @@ import time
 def main():
     #set k maximum distance
     t_0 = time.time()
-    k = 20
+    k = 15
     cos_alpha = -1
     #set word
-    word = 'tumor'
+    word = 'medicine'
     #x, counts = count.count_words_euclidean(word, k)
     #x, counts = count.count_words_cosine(word, cos_alpha)
     x, counts = count.count_words_euclidean(word, k)
