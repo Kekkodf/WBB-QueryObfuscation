@@ -11,3 +11,6 @@ def model(dimension):
         return api.load('glove-wiki-gigaword-300')
     else:
         raise ValueError('Invalid dimension: {}'.format(dimension))
+    
+def load(model):
+    return model

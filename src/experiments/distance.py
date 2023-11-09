@@ -1,44 +1,43 @@
 from scipy.spatial.distance import euclidean, cosine
 import math
+import nltk
+#import Part of Speech (POS) tagger
+from nltk import pos_tag
 
-def get_distance(word1, word2, model, distance):
+def get_distance(v1, v2, distance):
     try:
         if distance == 'cosine':
-            return math.acos(1-cosine(model[word1], model[word2]))
+            return math.degrees(math.acos(1-cosine(v1, v2)))
         elif distance == 'euclidean':
-            return euclidean(model[word1], model[word2])
+            return euclidean(v1, v2)
         else:
             raise ValueError('Distance not supported')
     except:
         pass
 
-def get_most_angular_distant(word, alpha, vocab_embeddings, model):
-    angles = []
-    for wrd in vocab_embeddings.keys():
-        if wrd == word:
-            continue
-        else:
-            angle = get_distance(word, wrd, model, 'cosine')
-            angles.append((wrd, angle))
-    angles = sorted(angles, key=lambda x: x[1])
-    answer = []
-    for angle in angles:
-        if angle[1] < alpha:
-            angle = (angle[0], math.degrees(angle[1]))
-            answer.append(angle)
-    return answer
-
-def get_most_euclidean_distant(word, d, vocab_embeddings, model):
-    distances = []
-    for wrd in vocab_embeddings.keys():
-        if wrd == word:
-            continue
-        else:
-            distance = get_distance(word, wrd, model, 'euclidean')
-            distances.append((wrd, distance))
-    distances = sorted(distances, key=lambda x: x[1])
-    answer = []
-    for distance in distances:
-        if distance[1] < d:
-            answer.append(distance)
-    return answer
+def get_rank(word, vocab_embeddings_queries, model, feature = 'distance'):
+    word_embedding = vocab_embeddings_queries[word]
+    if feature == 'distance':
+        distances = []
+        for wrd in vocab_embeddings_queries.keys():
+            if wrd == word:
+                distance = 0
+                distances.append((wrd, distance))
+            else:
+                embedding = model[wrd]
+                distance = get_distance(word_embedding, embedding, 'euclidean')
+                distances.append((wrd, distance))
+        distances = sorted(distances, key = lambda x: x[1])
+        return distances
+    elif feature == 'angle':
+        angles = []
+        for wrd in vocab_embeddings_queries.keys():
+            if wrd == word:
+                angle = 0
+                angles.append((wrd, angle))
+            else:
+                embedding = model[wrd]
+                angle = get_distance(word_embedding, embedding, 'cosine')
+                angles.append((wrd, angle))
+        angles = sorted(angles, key = lambda x: x[1])
+        return angles
