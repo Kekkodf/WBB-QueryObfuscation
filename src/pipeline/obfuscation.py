@@ -33,6 +33,9 @@ def compute_rank(word, vocab, model, feature):
             elif feature == 'angle':
                 r_word = 1 - cosine(word_embedding, wrd_embedding)
                 rank.append((wrd, r_word))
+            elif feature == 'ratio':
+                r_word = euclidean(word_embedding, wrd_embedding)*cosine(word_embedding, wrd_embedding)
+                rank.append((wrd, r_word))
             else:
                 raise ValueError('Feature not supported')
         if feature == 'distance':
@@ -40,6 +43,9 @@ def compute_rank(word, vocab, model, feature):
             return rank
         elif feature == 'angle':
             rank = sorted(rank, key = lambda x: x[1], reverse=True)
+            return rank
+        elif feature == 'ratio':
+            rank = sorted(rank[1:], key = lambda x: x[1], reverse=False)
             return rank
         else:
             raise ValueError('Feature not supported')
@@ -66,7 +72,6 @@ def partitions(rank, k, n):
     else:
         safe_box = rank[:k]
         candidates_box = rank[k:n*k]
-        #print(len(candidates_box))
         return safe_box, candidates_box
     
 def get_probabilities_of_extraction(candidates_box, distribution):
