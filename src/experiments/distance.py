@@ -5,9 +5,12 @@ import nltk
 from nltk import pos_tag
 
 def get_distance(v1, v2, distance):
+    '''
+    get_distance computes the distance between two vectors v1 and v2
+    '''
     try:
         if distance == 'cosine':
-            return math.degrees(math.acos(1-cosine(v1, v2)))
+            return 1-cosine(v1, v2)
         elif distance == 'euclidean':
             return euclidean(v1, v2)
         else:
@@ -16,28 +19,25 @@ def get_distance(v1, v2, distance):
         pass
 
 def get_rank(word, vocab_embeddings_queries, model, feature = 'distance'):
-    word_embedding = vocab_embeddings_queries[word]
+    '''
+    get_rank returns rank of words based on a feature
+
+    the rank is from the nearest to the farthest word from the word of interest
+    '''
+    word_embedding = model[word]
     if feature == 'distance':
         distances = []
         for wrd in vocab_embeddings_queries.keys():
-            if wrd == word:
-                distance = 0
-                distances.append((wrd, distance))
-            else:
-                embedding = model[wrd]
-                distance = get_distance(word_embedding, embedding, 'euclidean')
-                distances.append((wrd, distance))
-        distances = sorted(distances, key = lambda x: x[1])
+            embedding = model[wrd]
+            distance = get_distance(word_embedding, embedding, 'euclidean')
+            distances.append((wrd, distance))
+        distances = sorted(distances, key = lambda x: x[1], reverse=False)
         return distances
     elif feature == 'angle':
         angles = []
         for wrd in vocab_embeddings_queries.keys():
-            if wrd == word:
-                angle = 0
-                angles.append((wrd, angle))
-            else:
-                embedding = model[wrd]
-                angle = get_distance(word_embedding, embedding, 'cosine')
-                angles.append((wrd, angle))
-        angles = sorted(angles, key = lambda x: x[1])
+            embedding = model[wrd]
+            angle = get_distance(word_embedding, embedding, 'cosine')
+            angles.append((wrd, angle))
+        angles = sorted(angles, key = lambda x: x[1], reverse=True)
         return angles

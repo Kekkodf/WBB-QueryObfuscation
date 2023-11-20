@@ -2,72 +2,45 @@ import glove
 import queries
 import seaborn as sns
 import obfuscator
-import math
 import prepare_data as prep
-import random
-import tqdm
 import nltk
 #nltk.download('averaged_perceptron_tagger')
 
 def main():
+    #get most similar words
+    print('-'*50)
+    print('Starting experiment...')
+    print('-'*50)
     model = glove.model(dimension=50)
     #get glove embeddings
     model = glove.load(model)
+
+    print(model.most_similar('flow'))
 
     data = queries.get_data()
 
     vocab_embeddings_queries = prep.get_vocab_embeddings(data, model)
 
-    query = 'how many people use google in one day' #melanoma skin cancer symptoms #what causes ankle blisters  
+    query = 'what slows down the flow of blood' #melanoma skin cancer symptoms #what causes ankle blisters  
                                                 #what slows down the flow of blood
     
-    print('-'*50)
+    #print('-'*50)
     tokenized_query = query.split()
     tokenized_query = nltk.pos_tag(tokenized_query)
-    print('Tokenized query: {}'.format(tokenized_query))
     #define mechanism parameters
-    k=100
+    k = 3
     scale_param = 2
     shape = 1
-    new_query_distance_based = []
-    new_query_angle_based = []
-    for word, tag in tokenized_query:
-        #if tag == 'NN' or tag == 'NNS' or tag == 'JJ':
-            #get boxes
-            rank_distance, candidates_distance, safe_box_distance = obfuscator.get_safe_box(word, vocab_embeddings_queries, model, k, 'distance')
-            rank_angle, candidates_angle, safe_box_distance = obfuscator.get_safe_box(word, vocab_embeddings_queries, model, k, 'angle')
-        #else:
-            candidates_distance = [(word, 0)]
-            candidates_angle = [(word, 0)]
-
-        #print('-'*50)
-        #print('Word: {}'.format(word))
-        #print('Candidates distance based: {}'.format(candidates_distance))
-        #print('Candidates angle based: {}'.format(candidates_angle))
-        #print('-'*50)
-        
-        #get weights
-        #laplace
-        #weights = obfuscator.get_weights('laplace', len(candidates_distance), scale_param) 
-        #normal
-        #weights = obfuscator.get_weights('normal', len(candidates_distance), scale_param) 
-        #gamma
-        #weights = obfuscator.get_weights('gamma', len(candidates_distance), scale_param, shape) 
-        #uniform
-            weights = obfuscator.get_weights('uniform', len(candidates_distance), scale_param) 
-
-            #get new query
-            new_word_distance_based = obfuscator.get_new_word(candidates_distance, weights)
-            new_word_angle_based = obfuscator.get_new_word(candidates_angle, weights)
-
-            new_query_distance_based.append(new_word_distance_based)
-            new_query_angle_based.append(new_word_angle_based)
-
-    print('Parameter used: k = {}'.format(k))
+    feature = 'angle'
+    distribution = 'gamma'
+    N = 100
+    #do obfuscation
+    new_query = obfuscator.get_obfuscated_query(tokenized_query, feature, k, distribution, scale_param, shape, model, vocab_embeddings_queries, N)
+    print('-'*50)
+    print('Parameter used: k={}, scale_param={}, shape={}, feature={}, distribution={}, number of iterations={}'.format(k, scale_param, shape, feature, distribution, N))
     print('-'*50)
     print('Original query: {}'.format(query))
-    print('New query distance based: {}'.format(' '.join(new_query_distance_based)))
-    print('New query angle based: {}'.format(' '.join(new_query_angle_based)))
+    print('New query: {}'.format(' '.join(new_query)))
 
 if __name__ == '__main__':
     main()

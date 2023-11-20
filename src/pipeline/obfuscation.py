@@ -34,7 +34,7 @@ def compute_rank(word, vocab, model, feature):
                 r_word = 1 - cosine(word_embedding, wrd_embedding)
                 rank.append((wrd, r_word))
             elif feature == 'ratio':
-                r_word = euclidean(word_embedding, wrd_embedding)*cosine(word_embedding, wrd_embedding)
+                r_word = euclidean(word_embedding, wrd_embedding)*(1-cosine(word_embedding, wrd_embedding))
                 rank.append((wrd, r_word))
             else:
                 raise ValueError('Feature not supported')
@@ -51,7 +51,7 @@ def compute_rank(word, vocab, model, feature):
             raise ValueError('Feature not supported')
     except KeyError:
         print('Word not in vocabulary')
-        return None
+        pass
         
 
 def partitions(rank, k, n):
@@ -66,9 +66,9 @@ def partitions(rank, k, n):
     return: safe_box, candidates_box
     '''
     if rank is None:
-        return None
+        return None, None
     elif k == 0:
-        return None, [rank[0]]
+        return [rank[0]], [rank[0]]
     else:
         safe_box = rank[:k]
         candidates_box = rank[k:n*k]

@@ -7,7 +7,7 @@ Repository for the paper "" submitted to SIGIR 2024.
 Verify that the necessary packages are installed by running the following command:
 
 ```
-~$ pip install -r requirements.txt
+pip install -r requirements.txt
 ```
 
 ## General Overview
