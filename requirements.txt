@@ -1,9 +1,9 @@
-datasets==2.14.5
-gensim==4.3.0
-ir-datasets==0.5.5
-matplotlib==3.5.1
-matplotlib-inline==0.1.6
-nltk==3.8.1
+datasets
+gensim
+ir-datasets
+matplotlib
+matplotlib-inline
+nltk
 numpy
 pandas
 scikit-learn
