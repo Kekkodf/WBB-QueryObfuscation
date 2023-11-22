@@ -1,5 +1,7 @@
 import gensim.downloader as api
 import nltk
+#nltk.download('punkt')
+#nltk.download('averaged_perceptron_tagger')
 
 def model(dimension):
     if dimension == 50:

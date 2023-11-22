@@ -17,38 +17,32 @@ Parameters:
     - distribution:= Distribution for candidates selection
 '''
 
-def compute_rank(word, vocab, model, feature):
+def compute_rank(word, vocab, model):
     '''
     The method computes the rank of of most similar words in the vocabulary from a selected word in the query.
     The rank is a list of tuples (word, score) sorted by score in descending order.
     '''
     try:
         word_embedding = model[word]
-        rank = []
-        for wrd in vocab:
-            wrd_embedding = model[wrd]
-            if feature == 'distance':
-                r_word = euclidean(word_embedding, wrd_embedding)
-                rank.append((wrd, r_word))
-            elif feature == 'angle':
-                r_word = 1 - cosine(word_embedding, wrd_embedding)
-                rank.append((wrd, r_word))
-            elif feature == 'ratio':
-                r_word = euclidean(word_embedding, wrd_embedding)*(1-cosine(word_embedding, wrd_embedding))
-                rank.append((wrd, r_word))
-            else:
-                raise ValueError('Feature not supported')
-        if feature == 'distance':
-            rank = sorted(rank, key = lambda x: x[1], reverse=False)
-            return rank
-        elif feature == 'angle':
-            rank = sorted(rank, key = lambda x: x[1], reverse=True)
-            return rank
-        elif feature == 'ratio':
-            rank = sorted(rank[1:], key = lambda x: x[1], reverse=False)
-            return rank
-        else:
-            raise ValueError('Feature not supported')
+        rank_distance = []
+        rank_angle = []
+        rank_product = []
+        #for wrd in vocab:
+        embeddings = model[vocab]
+
+        raise ValueError('Stop')
+        r_word_distance = euclidean(word_embedding, wrd_embedding)
+        rank_distance.append((wrd, r_word_distance))
+        r_word_angle = 1 - cosine(word_embedding, wrd_embedding)
+        rank_angle.append((wrd, r_word_angle))
+        r_word_product = r_word_distance*r_word_angle
+        rank_product.append((wrd, r_word_product))
+        
+        rank_distance = sorted(rank_distance, key = lambda x: x[1], reverse=False)  
+        rank_angle = sorted(rank_angle, key = lambda x: x[1], reverse=True) 
+        rank_product = sorted(rank_product[1:], key = lambda x: x[1], reverse=False)
+            
+        return rank_distance, rank_angle, rank_product
     except KeyError:
         print('Word not in vocabulary')
         pass
