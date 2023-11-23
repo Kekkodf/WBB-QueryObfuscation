@@ -33,6 +33,7 @@ def main():
     dataset = ir_datasets.load("msmarco-document/trec-dl-2019/judged")
     query_df = pd.DataFrame(list(dataset.queries_iter()))
 
+
     print('Finished preprocessing in {:.2f} seconds'.format(time.time() - t_0))
 
     '''
@@ -49,8 +50,8 @@ def main():
     #define obfuscation parameters
     #parameters required for obfuscation
     t_0 = time.time()
-    k = 3 #size of safe_box, default = 3
-    n = 10 #size of candidates_box, default = 10
+    k = 5 #size of safe_box, default = 3
+    n = 20 #size of candidates_box, default = 10
     distribution = ('gamma', (1, 2)) #(name, param_1, ..., param_n)
 
     #OBFUSCATION DISTANCE BASED
@@ -67,7 +68,7 @@ def main():
                                'obfuscated_query_angle', 
                                'obfuscated_query_ratio'])
     
-    for query_og in tqdm(query_df['query'].values):
+    for query_og, i in zip(query_df['text'], tqdm(range(len(query_df['text'])), desc='Obfuscation queries', total=len(query_df['text']))):
         #tokenize query and get POS tags
         query = pre.get_POS_tags(pre.tokenize_query(query_og))
         #obfuscation variables
@@ -115,8 +116,7 @@ def main():
         df = pd.concat([df, pd.DataFrame(df_row, index=[0])], ignore_index=True)
 
     #save df
-    df.to_csv('results/pipeline/obfuscated_queries.csv', index=False)
-    print('Finished obfuscation distance based in {:.2f} s.'.format(time.time()-t_0))
+    df.to_csv('/ssd2/data/defaverifr/24_SIGIR_DFF/results/pipeline/obfuscated_queries_{k}_{n}_{distribution}.csv'.format(k=k, n=n, distribution=distribution), index=False, header=True)
     
 if __name__ == '__main__':
     main()
