@@ -19,18 +19,16 @@ Parameters:
     - k:= Size of safe_box
     - distribution:= Distribution for candidates selection
 '''
-def obfuscate(row, vocab, model, k, n, distribution, feature, num_queries):
+def obfuscate(row, vocab, model, k, n, distribution, feature):
     '''
     The method obfuscates a query using the distance based obfuscation technique.
     '''
-    new_query = row.progress_apply(compute_query, args=(vocab, model, k, n, distribution, feature, num_queries))
-    print(new_query)
-    #print(type(new_query))
-    #raise ValueError('Stop')
+    new_query = row.progress_apply(compute_query, args=(vocab, model, k, n, distribution, feature))
+    new_query = new_query.apply(lambda x: ' '.join(x))
     return new_query
     
 
-def compute_query(row, vocab, model, k, n, distribution, feature, num_queries):
+def compute_query(row, vocab, model, k, n, distribution, feature):
     '''
     The method computes the rank of of most similar words in the vocabulary from a selected word in the query.
     The rank is a list of tuples (word, score) sorted by score in descending order.
@@ -46,13 +44,13 @@ def compute_query(row, vocab, model, k, n, distribution, feature, num_queries):
                 for wrd in vocab:
                     wrd_embedding = model[wrd]
                     if feature == 'distance':
-                        r_word = euclidean(word_embedding, wrd_embedding)
+                        r_word = euclidean(word_embedding, wrd_embedding) #to be changed with function lookup Euclidean Matrix
                         rank.append((wrd, r_word))
                     elif feature == 'angle':
-                        r_word = 1 - cosine(word_embedding, wrd_embedding)
+                        r_word = 1 - cosine(word_embedding, wrd_embedding) #to be chanaged with function lookup Cosine Matrix
                         rank.append((wrd, r_word))
                     elif feature == 'product':
-                        r_word = euclidean(word_embedding, wrd_embedding)*(1-cosine(word_embedding, wrd_embedding))
+                        r_word = euclidean(word_embedding, wrd_embedding)*(1-cosine(word_embedding, wrd_embedding)) #to be chanaged with function lookup Cosine Matrix
                         rank.append((wrd, r_word))
                     else:
                         raise ValueError('Feature not supported!')

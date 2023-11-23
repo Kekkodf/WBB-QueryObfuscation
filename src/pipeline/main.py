@@ -72,15 +72,17 @@ def main():
     #get POS tags
     query_df['text'] = query_df['text'].apply(lambda x: pre.get_POS_tags(x))
     #obfuscate query
-    num_queries = len(query_df)
     print('Distance: Obfuscation started...')
-    df['obfuscated_query_distance'] = query_df.progress_apply(obf.obfuscate, args=(vocab, model, k, n, distribution, 'distance', num_queries))
+    df['obfuscated_query_distance'] = query_df.apply(obf.obfuscate, args=(vocab, model, k, n, distribution, 'distance'))
     print('Finished obfuscation distance based in {:.2f} s.'.format(time.time()-t_0))
+    print(df.head())
+    print('------------------------------------------')
+    raise ValueError('Stop here')
     t_0 = time.time()
-    df['obfuscated_query_angle'] = querformat_df.progress_apply(obf.obfuscate, args=(vocab, model, k, n, distribution, 'angle', num_queries))
+    df['obfuscated_query_angle'] = query_df.apply(obf.obfuscate, args=(vocab, model, k, n, distribution, 'angle'))
     print('Finished obfuscation angle based in {:.2f} s.'.format(time.time()-t_0))
     t_0 = time.time()
-    df['obfuscated_query_product'] = query_df.progress_apply(obf.obfuscate, args=(vocab, model, k, n, distribution, 'product', num_queries))
+    df['obfuscated_query_product'] = query_df.apply(obf.obfuscate, args=(vocab, model, k, n, distribution, 'product'))
     print('Finished obfuscation product based in {:.2f} s.'.format(time.time()-t_0))
     df['original_query'] = query_df['text'] 
     #save df

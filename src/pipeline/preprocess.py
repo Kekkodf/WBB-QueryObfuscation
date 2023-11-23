@@ -33,6 +33,8 @@ def get_vocab(model):
     #print('Vocab size: {}'.format(len(vocab_filtered)))
     #print('Filtered vocab size: {}'.format(len(filtered)))
     #print('Intersection: {}'.format(len(vocab_filtered.intersection(set(filtered)))))
+    #remove all words that contain numbers
+    vocab = [word for word in vocab if not any(char.isdigit() for char in word)]
     return vocab#, embeddings
 
 '''
