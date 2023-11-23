@@ -25,11 +25,15 @@ Prepare model:
 '''
 
 def get_vocab(model):
-    # Access the vocabulary using index_to_key
     vocab = model.index_to_key
-    # Access the embeddings using get_vecattr
-    embeddings = {word: model[word] for word in vocab}
-    return vocab, embeddings
+    #with open ('./data/msmarco-passage-vocab.txt', 'r') as f:
+    #    filtered = f.read().split('\n')
+    ##embeddings = {word: model[word] for word in filtered}
+    #vocab_filtered = set(filtered).intersection(set(vocab))
+    #print('Vocab size: {}'.format(len(vocab_filtered)))
+    #print('Filtered vocab size: {}'.format(len(filtered)))
+    #print('Intersection: {}'.format(len(vocab_filtered.intersection(set(filtered)))))
+    return vocab#, embeddings
 
 '''
 Prepare queries:

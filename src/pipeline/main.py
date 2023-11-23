@@ -7,6 +7,8 @@ import time
 import numpy as np
 import pandas as pd
 import ir_datasets
+from tqdm import tqdm
+tqdm.pandas()
 
 
 def main():
@@ -27,7 +29,7 @@ def main():
     #load model
     model = pre.load(model)
     #preprocessing
-    vocab, _ = pre.get_vocab(model)
+    vocab = pre.get_vocab(model)
     #get query
     dataset = ir_datasets.load("msmarco-document/trec-dl-2019/judged")
     query_df = pd.DataFrame(list(dataset.queries_iter()))
@@ -71,20 +73,16 @@ def main():
     query_df['text'] = query_df['text'].apply(lambda x: pre.get_POS_tags(x))
     #obfuscate query
     num_queries = len(query_df)
-    df['obfuscated_query_distance'] = query_df.apply(obf.obfuscate, args=(num_queries, vocab, model, k, n, distribution, 'distance'))
+    print('Distance: Obfuscation started...')
+    df['obfuscated_query_distance'] = query_df.progress_apply(obf.obfuscate, args=(vocab, model, k, n, distribution, 'distance', num_queries))
     print('Finished obfuscation distance based in {:.2f} s.'.format(time.time()-t_0))
-    print(df.head())
-    raise ValueError('Stop')
     t_0 = time.time()
-    df['obfuscated_query_angle'] = df.apply(lambda row: obf.obfuscate(row['original_query'], vocab, model, k, n, distribution, 'angle'), axis=1)
-    
+    df['obfuscated_query_angle'] = querformat_df.progress_apply(obf.obfuscate, args=(vocab, model, k, n, distribution, 'angle', num_queries))
     print('Finished obfuscation angle based in {:.2f} s.'.format(time.time()-t_0))
     t_0 = time.time()
-    df['obfuscated_query_product'] = df.apply(lambda row: obf.obfuscate(row['original_query'], vocab, model, k, n, distribution, 'product'), axis=1)
+    df['obfuscated_query_product'] = query_df.progress_apply(obf.obfuscate, args=(vocab, model, k, n, distribution, 'product', num_queries))
     print('Finished obfuscation product based in {:.2f} s.'.format(time.time()-t_0))
-    
     df['original_query'] = query_df['text'] 
-    
     #save df
     df.to_csv('results/pipeline/obfuscated_queries_{k}_{n}_{distribution}.csv'.format(k=k, n=n, distribution=distribution), index=False, header=True)
     print('Finished obfuscation distance based in {:.2f} s.'.format(time.time()-t_0))

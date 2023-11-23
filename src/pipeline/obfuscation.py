@@ -3,6 +3,7 @@ from scipy.spatial.distance import euclidean, cosine
 import random
 import pandas as pd
 from tqdm import tqdm
+tqdm.pandas()
 
 '''
 Obfusctaion phases:
@@ -18,22 +19,25 @@ Parameters:
     - k:= Size of safe_box
     - distribution:= Distribution for candidates selection
 '''
-def obfuscate(row, num_queries, vocab, model, feature, k, n, distribution):
+def obfuscate(row, vocab, model, k, n, distribution, feature, num_queries):
     '''
     The method obfuscates a query using the distance based obfuscation technique.
     '''
-    #rows are pandas series
-    new_query = row.apply(compute_rank, args=(num_queries, vocab, model, feature, k, n, distribution))
+    new_query = row.progress_apply(compute_query, args=(vocab, model, k, n, distribution, feature, num_queries))
+    print(new_query)
+    #print(type(new_query))
+    #raise ValueError('Stop')
     return new_query
     
 
-def compute_rank(row, num_queries, vocab, model, feature, k, n, distribution):
+def compute_query(row, vocab, model, k, n, distribution, feature, num_queries):
     '''
     The method computes the rank of of most similar words in the vocabulary from a selected word in the query.
     The rank is a list of tuples (word, score) sorted by score in descending order.
     '''
     list_of_queries = []
-    for word,i in zip(row, tqdm(num_queries, total=num_queries)):
+    
+    for word in row:
         query = []
         if word[1] == 'NN' or word[1] == 'NNS' or word[1] == 'NNP' or word[1] == 'NNPS' or word[1] == 'JJ':
             try:
@@ -51,7 +55,7 @@ def compute_rank(row, num_queries, vocab, model, feature, k, n, distribution):
                         r_word = euclidean(word_embedding, wrd_embedding)*(1-cosine(word_embedding, wrd_embedding))
                         rank.append((wrd, r_word))
                     else:
-                        raise ValueError('Feature not supported')
+                        raise ValueError('Feature not supported!')
                 if feature == 'distance':
                     rank = sorted(rank, key = lambda x: x[1], reverse=False)
                     safe_box, candidates_box = partitions(rank, k, n)
@@ -73,6 +77,7 @@ def compute_rank(row, num_queries, vocab, model, feature, k, n, distribution):
             query.append(word[0])
         query = ' '.join(query)
         list_of_queries.append(query)
+        
     return list_of_queries
 
 def partitions(rank, k, n):
