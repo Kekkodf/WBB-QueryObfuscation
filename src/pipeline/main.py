@@ -7,6 +7,7 @@ import time
 import numpy as np
 import pandas as pd
 import ir_datasets
+from tqdm import tqdm
 
 
 def main():
@@ -30,7 +31,8 @@ def main():
     vocab, _ = pre.get_vocab(model)
     #get query
     dataset = ir_datasets.load("msmarco-document/trec-dl-2019/judged")
-    query_df = pd.DataFrame(dataset.queries_iter(), columns=['id', 'query'])
+    query_df = pd.DataFrame(list(dataset.queries_iter()))
+
     print('Finished preprocessing in {:.2f} seconds'.format(time.time() - t_0))
 
     '''
@@ -42,13 +44,13 @@ def main():
         | |   | || (  \ \ | (      | |   | |      ) || |      | (   ) |   | |      | |   | |   | || | \   |
         | (___) || )___) )| )      | (___) |/\____) || (____/\| )   ( |   | |   ___) (___| (___) || )  \  |
         (_______)|/ \___/ |/       (_______)\_______)(_______/|/     \|   )_(   \_______/(_______)|/    )_)
-        
+
     '''
     #define obfuscation parameters
     #parameters required for obfuscation
     t_0 = time.time()
     k = 3 #size of safe_box, default = 3
-    n = 3 #size of candidates_box, default = 10
+    n = 10 #size of candidates_box, default = 10
     distribution = ('gamma', (1, 2)) #(name, param_1, ..., param_n)
 
     #OBFUSCATION DISTANCE BASED
@@ -59,14 +61,13 @@ def main():
     print('n: {}'.format(n))
     print('distribution: {}'.format(distribution))
     print('------------------------------------------')
-    print('Obfuscating...')
 
     df = pd.DataFrame(columns=['original_query', 
                                'obfuscated_query_distance', 
                                'obfuscated_query_angle', 
                                'obfuscated_query_ratio'])
     
-    for query_og in query_df['query']:
+    for query_og in tqdm(query_df['query'].values):
         #tokenize query and get POS tags
         query = pre.get_POS_tags(pre.tokenize_query(query_og))
         #obfuscation variables
@@ -78,9 +79,11 @@ def main():
             if word[0] in vocab:
                 if word[1] == 'NN' or word[1] == 'NNS' or word[1] == 'JJ' or word[1] == 'NNP' or word[1] == 'NNPS':
                     #get rank and partitions
-                    rank_distance, rank_angle, rank_ratio = obf.compute_rank(word[0], vocab, model)
+                    rank_distance = obf.compute_rank(word[0], vocab, model, 'distance')
                     safe_box_distance, candidates_box_distance = obf.partitions(rank_distance, k, n)
+                    rank_angle = obf.compute_rank(word[0], vocab, model, 'angle')
                     safe_box_angle, candidates_box_angle = obf.partitions(rank_angle, k, n)
+                    rank_ratio = obf.compute_rank(word[0], vocab, model, 'ratio')
                     safe_box_ratio, candidates_box_ratio = obf.partitions(rank_ratio, k, n)
                     #start sampling
                     #obfuscation

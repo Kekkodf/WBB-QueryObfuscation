@@ -17,30 +17,38 @@ Parameters:
     - distribution:= Distribution for candidates selection
 '''
 
-def compute_rank(word, vocab, model):
+def compute_rank(word, vocab, model, feature):
     '''
     The method computes the rank of of most similar words in the vocabulary from a selected word in the query.
     The rank is a list of tuples (word, score) sorted by score in descending order.
     '''
     try:
         word_embedding = model[word]
-        rank_distance = []
-        rank_angle = []
-        rank_product = []
+        rank = []
         for wrd in vocab:
             wrd_embedding = model[wrd]
-            r_word_distance = euclidean(word_embedding, wrd_embedding)
-            rank_distance.append((wrd, r_word_distance))
-            r_word_angle = 1 - cosine(word_embedding, wrd_embedding)
-            rank_angle.append((wrd, r_word_angle))
-            r_word_product = r_word_distance*r_word_angle
-            rank_product.append((wrd, r_word_product))
-            
-            rank_distance = sorted(rank_distance, key = lambda x: x[1], reverse=False)  
-            rank_angle = sorted(rank_angle, key = lambda x: x[1], reverse=True) 
-            rank_product = sorted(rank_product[1:], key = lambda x: x[1], reverse=False)
-            
-        return rank_distance, rank_angle, rank_product
+            if feature == 'distance':
+                r_word = euclidean(word_embedding, wrd_embedding)
+                rank.append((wrd, r_word))
+            elif feature == 'angle':
+                r_word = 1 - cosine(word_embedding, wrd_embedding)
+                rank.append((wrd, r_word))
+            elif feature == 'ratio':
+                r_word = euclidean(word_embedding, wrd_embedding)*(1-cosine(word_embedding, wrd_embedding))
+                rank.append((wrd, r_word))
+            else:
+                raise ValueError('Feature not supported')
+        if feature == 'distance':
+            rank = sorted(rank, key = lambda x: x[1], reverse=False)
+            return rank
+        elif feature == 'angle':
+            rank = sorted(rank, key = lambda x: x[1], reverse=True)
+            return rank
+        elif feature == 'ratio':
+            rank = sorted(rank[1:], key = lambda x: x[1], reverse=False)
+            return rank
+        else:
+            raise ValueError('Feature not supported')
     except KeyError:
         print('Word not in vocabulary')
         pass
@@ -101,11 +109,3 @@ def candidate_extraction(candidates_box, distribution):
     #raise ValueError('Stop')
     new_word = random.choices(candidates_box, probabilities)[0][0]
     return new_word
-
-        
-
-            
-
-#def candidate_selection():
-#    
-#
