@@ -1,6 +1,8 @@
 import numpy as np
 from scipy.spatial.distance import euclidean, cosine
 import random
+import pandas as pd
+from tqdm import tqdm
 
 '''
 Obfusctaion phases:
@@ -16,43 +18,62 @@ Parameters:
     - k:= Size of safe_box
     - distribution:= Distribution for candidates selection
 '''
+def obfuscate(row, num_queries, vocab, model, feature, k, n, distribution):
+    '''
+    The method obfuscates a query using the distance based obfuscation technique.
+    '''
+    #rows are pandas series
+    new_query = row.apply(compute_rank, args=(num_queries, vocab, model, feature, k, n, distribution))
+    return new_query
+    
 
-def compute_rank(word, vocab, model, feature):
+def compute_rank(row, num_queries, vocab, model, feature, k, n, distribution):
     '''
     The method computes the rank of of most similar words in the vocabulary from a selected word in the query.
     The rank is a list of tuples (word, score) sorted by score in descending order.
     '''
-    try:
-        word_embedding = model[word]
-        rank = []
-        for wrd in vocab:
-            wrd_embedding = model[wrd]
-            if feature == 'distance':
-                r_word = euclidean(word_embedding, wrd_embedding)
-                rank.append((wrd, r_word))
-            elif feature == 'angle':
-                r_word = 1 - cosine(word_embedding, wrd_embedding)
-                rank.append((wrd, r_word))
-            elif feature == 'ratio':
-                r_word = euclidean(word_embedding, wrd_embedding)*(1-cosine(word_embedding, wrd_embedding))
-                rank.append((wrd, r_word))
-            else:
-                raise ValueError('Feature not supported')
-        if feature == 'distance':
-            rank = sorted(rank, key = lambda x: x[1], reverse=False)
-            return rank
-        elif feature == 'angle':
-            rank = sorted(rank, key = lambda x: x[1], reverse=True)
-            return rank
-        elif feature == 'ratio':
-            rank = sorted(rank[1:], key = lambda x: x[1], reverse=False)
-            return rank
+    list_of_queries = []
+    for word,i in zip(row, tqdm(num_queries, total=num_queries)):
+        query = []
+        if word[1] == 'NN' or word[1] == 'NNS' or word[1] == 'NNP' or word[1] == 'NNPS' or word[1] == 'JJ':
+            try:
+                word_embedding = model[word[0]]
+                rank = []
+                for wrd in vocab:
+                    wrd_embedding = model[wrd]
+                    if feature == 'distance':
+                        r_word = euclidean(word_embedding, wrd_embedding)
+                        rank.append((wrd, r_word))
+                    elif feature == 'angle':
+                        r_word = 1 - cosine(word_embedding, wrd_embedding)
+                        rank.append((wrd, r_word))
+                    elif feature == 'product':
+                        r_word = euclidean(word_embedding, wrd_embedding)*(1-cosine(word_embedding, wrd_embedding))
+                        rank.append((wrd, r_word))
+                    else:
+                        raise ValueError('Feature not supported')
+                if feature == 'distance':
+                    rank = sorted(rank, key = lambda x: x[1], reverse=False)
+                    safe_box, candidates_box = partitions(rank, k, n)
+                    new_word = candidate_extraction(candidates_box, distribution)
+                    query.append(new_word)
+                elif feature == 'angle':
+                    rank = sorted(rank, key = lambda x: x[1], reverse=True)
+                    safe_box, candidates_box = partitions(rank, k, n)
+                    new_word = candidate_extraction(candidates_box, distribution)
+                    query.append(new_word)
+                elif feature == 'product':
+                    rank = sorted(rank[1:], key = lambda x: x[1], reverse=False)
+                    safe_box, candidates_box = partitions(rank, k, n)
+                    new_word = candidate_extraction(candidates_box, distribution)
+                    query.append(new_word)
+            except KeyError:
+                pass
         else:
-            raise ValueError('Feature not supported')
-    except KeyError:
-        print('Word not in vocabulary')
-        pass
-        
+            query.append(word[0])
+        query = ' '.join(query)
+        list_of_queries.append(query)
+    return list_of_queries
 
 def partitions(rank, k, n):
     '''
@@ -105,7 +126,5 @@ def get_probabilities_of_extraction(candidates_box, distribution):
     
 def candidate_extraction(candidates_box, distribution):
     probabilities = get_probabilities_of_extraction(candidates_box, distribution)
-    #print(probabilities[:5])
-    #raise ValueError('Stop')
     new_word = random.choices(candidates_box, probabilities)[0][0]
     return new_word

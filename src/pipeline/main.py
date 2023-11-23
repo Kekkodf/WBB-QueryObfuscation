@@ -7,7 +7,6 @@ import time
 import numpy as np
 import pandas as pd
 import ir_datasets
-from tqdm import tqdm
 
 
 def main():
@@ -32,7 +31,7 @@ def main():
     #get query
     dataset = ir_datasets.load("msmarco-document/trec-dl-2019/judged")
     query_df = pd.DataFrame(list(dataset.queries_iter()))
-
+    query_df = query_df[['text']]
 
     print('Finished preprocessing in {:.2f} seconds'.format(time.time() - t_0))
 
@@ -50,12 +49,11 @@ def main():
     #define obfuscation parameters
     #parameters required for obfuscation
     t_0 = time.time()
-    k = 5 #size of safe_box, default = 3
-    n = 20 #size of candidates_box, default = 10
+    k = 3 #size of safe_box, default = 3
+    n = 5 #size of candidates_box, default = 10
     distribution = ('gamma', (1, 2)) #(name, param_1, ..., param_n)
 
     #OBFUSCATION DISTANCE BASED
-    new_query = []
     print('------------------------------------------')
     print('Parameters:')
     print('k: {}'.format(k))
@@ -63,60 +61,33 @@ def main():
     print('distribution: {}'.format(distribution))
     print('------------------------------------------')
 
-    df = pd.DataFrame(columns=['original_query', 
-                               'obfuscated_query_distance', 
-                               'obfuscated_query_angle', 
-                               'obfuscated_query_ratio'])
+    df = pd.DataFrame(columns=['original_query'])
     
-    for query_og, i in zip(query_df['text'], tqdm(range(len(query_df['text'])), desc='Obfuscation queries', total=len(query_df['text']))):
-        #tokenize query and get POS tags
-        query = pre.get_POS_tags(pre.tokenize_query(query_og))
-        #obfuscation variables
-        new_query_distance = []
-        new_query_angle = []
-        new_query_ratio = []
-        #iterate over all words in te query
-        for word in query:
-            if word[0] in vocab:
-                if word[1] == 'NN' or word[1] == 'NNS' or word[1] == 'JJ' or word[1] == 'NNP' or word[1] == 'NNPS':
-                    #get rank and partitions
-                    rank_distance = obf.compute_rank(word[0], vocab, model, 'distance')
-                    safe_box_distance, candidates_box_distance = obf.partitions(rank_distance, k, n)
-                    rank_angle = obf.compute_rank(word[0], vocab, model, 'angle')
-                    safe_box_angle, candidates_box_angle = obf.partitions(rank_angle, k, n)
-                    rank_ratio = obf.compute_rank(word[0], vocab, model, 'ratio')
-                    safe_box_ratio, candidates_box_ratio = obf.partitions(rank_ratio, k, n)
-                    #start sampling
-                    #obfuscation
-                    substitution_distance = obf.candidate_extraction(candidates_box_distance, distribution)
-                    substitution_angle = obf.candidate_extraction(candidates_box_angle, distribution)
-                    substitution_ratio = obf.candidate_extraction(candidates_box_ratio, distribution)
-                    #append new word
-                    new_query_distance.append(substitution_distance)
-                    new_query_angle.append(substitution_angle)
-                    new_query_ratio.append(substitution_ratio)
-                else:
-                    new_query_distance.append(word[0])
-                    new_query_angle.append(word[0])
-                    new_query_ratio.append(word[0])
-            else:
-                new_query_distance.append(word[0])
-                new_query_angle.append(word[0])
-                new_query_ratio.append(word[0])
-        #add to df
-        obfuscated_query_distance = ' '.join(new_query_distance)
-        obfuscated_query_angle = ' '.join(new_query_angle)
-        obfuscated_query_ratio = ' '.join(new_query_ratio)
-
-        df_row = {'original_query': query_og, 
-                  'obfuscated_query_distance': obfuscated_query_distance, 
-                  'obfuscated_query_angle': obfuscated_query_angle, 
-                  'obfuscated_query_ratio': obfuscated_query_ratio}
-        
-        df = pd.concat([df, pd.DataFrame(df_row, index=[0])], ignore_index=True)
-
+    #add original query to df under column 'original_query'
+    df['original_query'] = query_df['text']
+    #tokenize query
+    query_df['text'] = query_df['text'].apply(lambda x: pre.tokenize_query(x))
+    #get POS tags
+    query_df['text'] = query_df['text'].apply(lambda x: pre.get_POS_tags(x))
+    #obfuscate query
+    num_queries = len(query_df)
+    df['obfuscated_query_distance'] = query_df.apply(obf.obfuscate, args=(num_queries, vocab, model, k, n, distribution, 'distance'))
+    print('Finished obfuscation distance based in {:.2f} s.'.format(time.time()-t_0))
+    print(df.head())
+    raise ValueError('Stop')
+    t_0 = time.time()
+    df['obfuscated_query_angle'] = df.apply(lambda row: obf.obfuscate(row['original_query'], vocab, model, k, n, distribution, 'angle'), axis=1)
+    
+    print('Finished obfuscation angle based in {:.2f} s.'.format(time.time()-t_0))
+    t_0 = time.time()
+    df['obfuscated_query_product'] = df.apply(lambda row: obf.obfuscate(row['original_query'], vocab, model, k, n, distribution, 'product'), axis=1)
+    print('Finished obfuscation product based in {:.2f} s.'.format(time.time()-t_0))
+    
+    df['original_query'] = query_df['text'] 
+    
     #save df
-    df.to_csv('/ssd2/data/defaverifr/24_SIGIR_DFF/results/pipeline/obfuscated_queries_{k}_{n}_{distribution}.csv'.format(k=k, n=n, distribution=distribution), index=False, header=True)
+    df.to_csv('results/pipeline/obfuscated_queries_{k}_{n}_{distribution}.csv'.format(k=k, n=n, distribution=distribution), index=False, header=True)
+    print('Finished obfuscation distance based in {:.2f} s.'.format(time.time()-t_0))
     
 if __name__ == '__main__':
     main()
