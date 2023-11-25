@@ -20,7 +20,7 @@ Parameters:
     - distribution:= Distribution for candidates selection
 '''
 
-desired_pos_tags = ['NN', 'NNS', 'NNP', 'NNPS', 'JJ']
+desired_pos_tags = ['NN', 'NNS', 'NNP', 'NNPS', 'JJ', 'JJS']
 
 def obfuscate(row, model, k, n, distribution, feature):
     '''

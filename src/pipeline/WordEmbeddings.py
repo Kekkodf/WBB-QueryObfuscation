@@ -28,8 +28,8 @@ class WordEmbeddings:
             found_safe = distance.argsort(axis=1)[:, :k]
         elif feature == 'angle':
             distance = cosine_distance_matrix(vectors, self._embeddings_matrix)
-            found_candidates = distance.argsort(axis=1)[:, -k*n:-k]
-            found_safe = distance.argsort(axis=1)[:, -k:]
+            found_candidates = distance.argsort(axis=1)[:, -k*n:-k][:, ::-1]  
+            found_safe = distance.argsort(axis=1)[:, -k:][:, ::-1]
         elif feature == 'product':
             distance = product_metrix(vectors, self._embeddings_matrix)
             found_candidates = distance.argsort(axis=1)[:, k:k*n]
@@ -44,10 +44,9 @@ class WordEmbeddings:
     def indexes_to_words(self, indexes):
         return [self._int2word[e] for f in indexes for e in f]
 
-    def candidate_extraction(self, candidates_box, distribution):
-        probabilities = get_probabilities_of_extraction(candidates_box, distribution)
-        new_word = random.choices(candidates_box, probabilities)[0]
-        return new_word
+    def candidate_extraction(self, candidates_boxes, distribution):
+        probabilities = get_probabilities_of_extraction(candidates_boxes, distribution)
+        return list(random.choices(candidates_boxes, weights=probabilities, k=len(candidates_boxes)))
 
 @staticmethod
 def euclidean_distance_matrix(x, y):

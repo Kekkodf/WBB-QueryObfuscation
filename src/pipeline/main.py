@@ -81,7 +81,7 @@ def main():
     df['obfuscated_query_product'] = query_df.apply(obf.obfuscate, args=(model, k, n, distribution, 'product'))
     print('Finished obfuscation product based in {:.2f} s.'.format(time.time()-t_0))
     #save df
-    df.to_csv('results/pipeline/obfuscated_queries_{k}_{n}_{distribution}.csv'.format(k=k, n=n, distribution=distribution), index=False, header=True)
+    df.to_csv('./results/pipeline/obfuscated_queries_{k}_{n}_{distribution}.csv'.format(k=k, n=n, distribution=distribution), index=False, header=True)
     print('Finished obfuscation distance based in {:.2f} s.'.format(time.time()-t_0_0))
     
 if __name__ == '__main__':

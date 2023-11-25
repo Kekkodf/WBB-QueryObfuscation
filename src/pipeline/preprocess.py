@@ -5,13 +5,13 @@ import nltk
 
 def model(dimension):
     if dimension == 50:
-        return api.load('glove-wiki-gigaword-50')
+        return api.load('glove-wiki-gigaword-50'), api.load('glove-wiki-gigaword-50').index_to_key
     elif dimension == 100:
-        return api.load('glove-wiki-gigaword-100')
+        return api.load('glove-wiki-gigaword-100'), api.load('glove-wiki-gigaword-100').index_to_key
     elif dimension == 200:
-        return api.load('glove-wiki-gigaword-200')
+        return api.load('glove-wiki-gigaword-200'), api.load('glove-wiki-gigaword-200').index_to_key
     elif dimension == 300:
-        return api.load('glove-wiki-gigaword-300')
+        return api.load('glove-wiki-gigaword-300'), api.load('glove-wiki-gigaword-300').index_to_key
     else:
         raise ValueError('Invalid dimension: {}'.format(dimension))
     
@@ -33,8 +33,6 @@ def get_vocab(model):
     #print('Vocab size: {}'.format(len(vocab_filtered)))
     #print('Filtered vocab size: {}'.format(len(filtered)))
     #print('Intersection: {}'.format(len(vocab_filtered.intersection(set(filtered)))))
-    #remove all words that contain numbers
-    vocab = [word for word in vocab if not any(char.isdigit() for char in word)]
     return vocab#, embeddings
 
 '''
