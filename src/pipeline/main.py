@@ -9,6 +9,7 @@ import pandas as pd
 import ir_datasets
 from tqdm import tqdm
 tqdm.pandas()
+import WordEmbeddings as we
 
 
 def main():
@@ -25,11 +26,8 @@ def main():
                                                                                                                      
     '''
     #define model
-    model = pre.model(dimension = 300)
-    #load model
-    model = pre.load(model)
-    #preprocessing
-    vocab = pre.get_vocab(model)
+    glove, vocab = pre.model(dimension = 300)
+    model = we.WordEmbeddings(glove, vocab)
     #get query
     dataset = ir_datasets.load("msmarco-document/trec-dl-2019/judged")
     query_df = pd.DataFrame(list(dataset.queries_iter()))
@@ -50,12 +48,12 @@ def main():
     '''
     #define obfuscation parameters
     #parameters required for obfuscation
-    t_0 = time.time()
+    t_0, t_0_0 = time.time(), time.time()
     k = 3 #size of safe_box, default = 3
-    n = 5 #size of candidates_box, default = 10
+    n = 10 #size of candidates_box, default = 10
     distribution = ('gamma', (1, 2)) #(name, param_1, ..., param_n)
 
-    #OBFUSCATION DISTANCE BASED
+    #OBFUSCATION PARAMS
     print('------------------------------------------')
     print('Parameters:')
     print('k: {}'.format(k))
@@ -71,23 +69,20 @@ def main():
     query_df['text'] = query_df['text'].apply(lambda x: pre.tokenize_query(x))
     #get POS tags
     query_df['text'] = query_df['text'].apply(lambda x: pre.get_POS_tags(x))
+
     #obfuscate query
     print('Distance: Obfuscation started...')
-    df['obfuscated_query_distance'] = query_df.apply(obf.obfuscate, args=(vocab, model, k, n, distribution, 'distance'))
+    df['obfuscated_query_distance'] = query_df.apply(obf.obfuscate, args=(model, k, n, distribution, 'distance'))
     print('Finished obfuscation distance based in {:.2f} s.'.format(time.time()-t_0))
-    print(df.head())
-    print('------------------------------------------')
-    raise ValueError('Stop here')
     t_0 = time.time()
-    df['obfuscated_query_angle'] = query_df.apply(obf.obfuscate, args=(vocab, model, k, n, distribution, 'angle'))
+    df['obfuscated_query_angle'] = query_df.apply(obf.obfuscate, args=(model, k, n, distribution, 'angle'))
     print('Finished obfuscation angle based in {:.2f} s.'.format(time.time()-t_0))
     t_0 = time.time()
-    df['obfuscated_query_product'] = query_df.apply(obf.obfuscate, args=(vocab, model, k, n, distribution, 'product'))
+    df['obfuscated_query_product'] = query_df.apply(obf.obfuscate, args=(model, k, n, distribution, 'product'))
     print('Finished obfuscation product based in {:.2f} s.'.format(time.time()-t_0))
-    df['original_query'] = query_df['text'] 
     #save df
     df.to_csv('results/pipeline/obfuscated_queries_{k}_{n}_{distribution}.csv'.format(k=k, n=n, distribution=distribution), index=False, header=True)
-    print('Finished obfuscation distance based in {:.2f} s.'.format(time.time()-t_0))
+    print('Finished obfuscation distance based in {:.2f} s.'.format(time.time()-t_0_0))
     
 if __name__ == '__main__':
     main()
