@@ -11,7 +11,7 @@ stopwords = nltk.corpus.stopwords.words('english')
 class WordEmbeddings:
     def __init__(self, model, vocab):
         # Filter out words with any non-alphabetic characters from the vocabulary
-        self.vocab = [word for word in vocab if word in words and word not in stopwords]
+        self.vocab = [word for word in vocab if word not in stopwords and word.isalpha()]
         self.model = model
         #size of the embeddings
         self._embeddings = {word: model[word] for word in self.vocab}

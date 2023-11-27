@@ -54,12 +54,12 @@ def main():
     #define obfuscation parameters
     #parameters required for obfuscation
     t_0, t_0_0 = time.time(), time.time()
-    k = 3 #size of safe_box, default = 3
-    #n = 10 #size of candidates_box, default = 10
+    #k = 3 #size of safe_box, default = 3
+    n = 10 #size of candidates_box, default = 10
     distribution = ('gamma', (1, 2)) #(name, param_1, ..., param_n)
 
     with Pool(3) as p:
-        for n in range(1,11):
+        for k in range(1,11):
         #OBFUSCATION PARAMS
             print('------------------------------------------')
             print('Parameters:')
