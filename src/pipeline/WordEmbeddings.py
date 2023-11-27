@@ -1,10 +1,17 @@
 import numpy as np
 import random
+import nltk
+#nltk.download('words')
+#nltk.download('stopwords')
+
+words = set(nltk.corpus.words.words())
+stopwords = nltk.corpus.stopwords.words('english')
+
 
 class WordEmbeddings:
     def __init__(self, model, vocab):
         # Filter out words with any non-alphabetic characters from the vocabulary
-        self.vocab = [word for word in vocab if word.isalpha()]
+        self.vocab = [word for word in vocab if word in words and word not in stopwords]
         self.model = model
         #size of the embeddings
         self._embeddings = {word: model[word] for word in self.vocab}
@@ -28,8 +35,8 @@ class WordEmbeddings:
             found_safe = distance.argsort(axis=1)[:, :k]
         elif feature == 'angle':
             distance = cosine_distance_matrix(vectors, self._embeddings_matrix)
-            found_candidates = distance.argsort(axis=1)[:, -k*n:-k][:, ::-1]  
-            found_safe = distance.argsort(axis=1)[:, -k:][:, ::-1]
+            found_candidates = distance.argsort(axis=1)[:, k:k*n]
+            found_safe = distance.argsort(axis=1)[:, :k]
         elif feature == 'product':
             distance = product_metrix(vectors, self._embeddings_matrix)
             found_candidates = distance.argsort(axis=1)[:, k:k*n]
