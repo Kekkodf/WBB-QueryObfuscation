@@ -29,20 +29,23 @@ class WordEmbeddings:
         return self._embeddings[word]
     
     def get_k_closest_terms(self, vectors, k, n, feature):
-        if feature == 'distance':
-            distance = euclidean_distance_matrix(vectors, self._embeddings_matrix)
-            found_candidates = distance.argsort(axis=1)[:, k:k*n]
-            found_safe = distance.argsort(axis=1)[:, :k]
-        elif feature == 'angle':
-            distance = cosine_distance_matrix(vectors, self._embeddings_matrix)
-            found_candidates = distance.argsort(axis=1)[:, k:k*n]
-            found_safe = distance.argsort(axis=1)[:, :k]
-        elif feature == 'product':
-            distance = product_metrix(vectors, self._embeddings_matrix)
-            found_candidates = distance.argsort(axis=1)[:, k:k*n]
-            found_safe = distance.argsort(axis=1)[:, :k]
+        if n > k:
+            if feature == 'distance':
+                distance = euclidean_distance_matrix(vectors, self._embeddings_matrix)
+                found_candidates = distance.argsort(axis=1)[:, k:n]
+                found_safe = distance.argsort(axis=1)[:, :k]
+            elif feature == 'angle':
+                distance = cosine_distance_matrix(vectors, self._embeddings_matrix)
+                found_candidates = distance.argsort(axis=1)[:, k:n]
+                found_safe = distance.argsort(axis=1)[:, :k]
+            elif feature == 'product':
+                distance = product_metrix(vectors, self._embeddings_matrix)
+                found_candidates = distance.argsort(axis=1)[:, k:n]
+                found_safe = distance.argsort(axis=1)[:, :k]
+            else:
+                raise ValueError('Feature not supported!')
         else:
-            raise ValueError('Feature not supported!')
+            raise ValueError('n must be greater than k!')
 
         candidates = self.indexes_to_words(found_candidates)
         safe = self.indexes_to_words(found_safe)
