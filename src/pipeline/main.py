@@ -30,10 +30,10 @@ def main():
     glove, vocab = pre.model(dimension = 300)
     model = we.WordEmbeddings(glove, vocab)
     #get query
-    dataset = ir_datasets.load("msmarco-document/trec-dl-2019/judged")
-    query_df = pd.DataFrame(list(dataset.queries_iter()))
-    query_id = query_df['query_id']
+    dataset = ir_datasets.load("msmarco-passage/trec-dl-2019/judged")
+    query_df = pd.DataFrame(dataset.queries_iter())
     query_df = query_df[['text']]
+    query_id = query_df['query_id']
 
     print('Finished preprocessing in {:.2f} seconds'.format(time.time() - t_0))
 
@@ -55,12 +55,13 @@ def main():
     #define obfuscation parameters
     #parameters required for obfuscation
     t_0, t_0_0 = time.time(), time.time()
-    k = 3 #size of safe_box, default = 3
-    #n = 10 #size of candidates_box, default = 10
+    #k = 3 #size of safe_box, default = 3
+    n = 10 #size of candidates_box, default = 10
     distribution = ('gamma', (1, 2)) #(name, param_1, ..., param_n)
 
     with Pool(3) as p:
-        for n in range(1,11):
+        for k in range(1,11):
+        #for n in range(k+1, k+11):
         #OBFUSCATION PARAMS
             print('------------------------------------------')
             print('Parameters:')
@@ -69,7 +70,9 @@ def main():
             print('distribution: {}'.format(distribution))
             print('------------------------------------------')
     
-            df = pd.DataFrame(columns=['original_query'])
+            df = pd.DataFrame(columns=['query_id', 'original_query'])
+            df['qid'] = query_id
+            df.to_csv('prova.csv', index=False, header=True)
     
             #add original query to df under column 'original_query'
             df['original_query'] = query_df['text']
@@ -87,7 +90,6 @@ def main():
             print('Finished obfuscation angle based in {:.2f} s.'.format(time.time()-t_0))
             t_0 = time.time()
             df['obfuscated_query_product'] = query_df.apply(obf.obfuscate, args=(model, k, n, distribution, 'product'))
-            df.insert(0, 'query_id', query_id)
             print('Finished obfuscation product based in {:.2f} s.'.format(time.time()-t_0))
             #save df
             df.to_csv('./results/pipeline/obfuscated_queries_{k}_{n}_{distribution}.csv'.format(k=k, n=n, distribution=distribution), index=False, header=True)
