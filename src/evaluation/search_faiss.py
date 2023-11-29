@@ -6,7 +6,7 @@ import numpy as np
 # m2hf = {"tasb": 'sentence-transformers/msmarco-distilbert-base-tas-b'}
 m2hf = {"tasb": 'sentence-transformers/msmarco-distilbert-base-tas-b',
         "contriever": "facebook/contriever-msmarco",
-        "ance": 'sentence-transformers/msmarco-roberta-base-ance-firstp'}
+        "glove": 'sentence-transformers/average_word_embeddings_glove.6B.300d'}
 
 
 def search_faiss(queries, collection, model_name, k=1000):
