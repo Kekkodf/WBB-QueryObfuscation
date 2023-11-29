@@ -1,66 +1,67 @@
 import pandas as pd
 import faiss
 from sentence_transformers import SentenceTransformer
+import ir_datasets
+import numpy as np
+from tqdm import tqdm
+tqdm.pandas()
 
-def sentence_embedding(doc, queries, model_name = "facebook/contriever-msmarco"):
+# m2hf = {"tasb": 'sentence-transformers/msmarco-distilbert-base-tas-b'}
+m2hf = {"tasb": 'sentence-transformers/msmarco-distilbert-base-tas-b',
+        "contriever": "facebook/contriever-msmarco",
+        "ance": 'sentence-transformers/msmarco-roberta-base-ance-firstp'}
+
+def search_faiss(queries, model_name, type_of_obfuscation='original_query', k=1000, i=0):
+    '''
+    queries = set of queries to be encoded and searched
+    model_name = name of the model to be used
+    k = number of documents to be retrieved
+    '''
 
     #------- STEP 0: choose the model that you wish to use -------#
+    model = SentenceTransformer(m2hf[model_name])   
+    if i == 0:
+        print('Model used: ', model_name) 
 
-    #eg: contriever
-    #use a handler of an hugging face model
-    model = SentenceTransformer(model_name)
-
-    #--------------- STEP 1: encode the documents ---------------#
-    docs = pd.read_csv(doc)
-    encoded_docs =  model.encode(docs["body"])
-
-    #----------- STEP 2: put them into a faiss index -----------#
-    # When searching, faiss will return the number of rows: you will need a map to keep track
-    # of which document correspond to each row
-    mapper_path = '/home/kdf/mnt_grace/ssd/data/faggioli/24-ECIR-FF/data/indexes/msmarco-passage/faiss/glove/glove.map'
-    mapper = list(map(lambda x: x.strip(), open(mapper_path, "r").readlines()))
-
-    '''
-    # if you have a faiss index already saved on disk, you can read it
-    # Specify the file path of the saved index
-    index_filename = "path/to/your/faiss/index.faiss"
+    #------- STEP 1: encode the documents -------#
+    #------- STEP 2: encode the queries -------#
+    #original_query,obfuscated_query_distance,obfuscated_query_angle,obfuscated_query_product
+    enc_queries_real = model.encode(queries[type_of_obfuscation])
+    if i == 0:
+        print('Queries encoded')
+        print('Shape of encoded queries: ', enc_queries_real.shape) #shape = (n_queries, 768)
+    #----------- STEP 3: read faiss indeces for documents -----------#
     # Load the index from the file
-    faiss_index = faiss.read_index(index_filename)
-    '''
-    index_filename = "/home/kdf/mnt_grace/ssd/data/faggioli/24-ECIR-FF/data/indexes/msmarco-passage/faiss/glove/glove.faiss"
-    faiss_index = faiss.read_index(index_filename)
+    #index = faiss.IndexFlatIP(model[1].word_embedding_dimension)
+    index_filename = '../../../../ssd/data/faggioli/24-ECIR-FF/data/indexes/msmarco-passage/faiss/contriever/contriever.faiss'
+    index = faiss.read_index(index_filename)
 
-    faiss_index = faiss.IndexFlatIP(model[1].word_embedding_dimension)
-    faiss_index.add(encoded_docs)
+    mapper = list(map(lambda x: x.strip(), open('../../../../ssd/data/faggioli/24-ECIR-FF/data/indexes/msmarco-passage/faiss/contriever/contriever.map', "r").readlines()))
+    #print('Index loaded')
+    if i == 0:
+        print('Number of documents in the index: ', len(mapper))
+        print('Number of documents to be retrieved: ', k)
 
-    # you can also save the model for future use
-    #faiss.write_index(faiss_index, f"path/to/your/faiss/index.faiss")
+    #--------------------- STEP 4: search ---------------------#
+    
+    innerproducts, indices = index.search(enc_queries_real, k) #error assert d == model[1].word_embedding_dimension
 
-    #--------------- STEP 3: encode the queries ---------------#
-    queries = pd.read_csv(queries)
-    encoded_queries_real = model.encode(queries["original_query"])
-    encoded_queries_obf_distance = model.encode(queries["obfuscated_query_distance"])
-    encoded_queries_obf_angle = model.encode(queries["obfuscated_query_angle"])
-    encoded_queries_obf_product = model.encode(queries["obfuscated_query_product"])
+    #print('Search performed')
+    #print('Shape of innerproducts: ', innerproducts.shape) #shape = (n_queries, k)
+    #print('Shape of indices: ', indices.shape) #shape = (n_queries, k)
+    nqueries = len(innerproducts)
+    if i == 0:
+        print('Number of queries: ', nqueries)
+    out = []
+    for i in tqdm(range(nqueries)):
+        run = pd.DataFrame(list(zip([queries.iloc[i]['query_id']] * len(innerproducts[i]), indices[i], innerproducts[i])), columns=["query_id", "did", "score"])
+        run.sort_values("score", ascending=False, inplace=True)
+        run['did'] = run['did'].apply(lambda x: mapper[x])
+        run['rank'] = np.arange(len(innerproducts[i]))
+        out.append(run)
+    out = pd.concat(out)
+    out["Q0"] = "Q0"
+    out["run"] = model_name.replace('_', '-')
+    out = out[["query_id", "Q0", "did", "rank", "score", "run"]]
 
-    #--------------------- STEP 4: search ---------------------#  
-    k = 10 # number of docs retrieved per query
-    dots, idxs = faiss_index.search(encoded_queries_real, k)
-    dots_obf_distance, idxs_obf_distance = faiss_index.search(encoded_queries_obf_distance, k)
-    dots_obf_angle, idxs_obf_angle = faiss_index.search(encoded_queries_obf_angle, k)
-    dots_obf_product, idxs_obf_product = faiss_index.search(encoded_queries_obf_product, k)
-
-    #dots is a list of lists (maximum dimension #queries x k), where the ij-th cell corresponds to the dot
-    #product of the i-th query representation with the j-th most similar document
-    #indxs is a similar list of lists, where there are the indexes of the most similar documents
-
-    run = []
-    for i in range(len(dots)):
-        retrieved_docs = pd.DataFrame({"did": idxs[i], "score_real":dots[i], "score_obf_distance":dots_obf_distance[i], "score_obf_angle":dots_obf_angle[i], "score_obf_product":dots_obf_product[i]})
-        retrieved_docs['qid'] = queries.iloc[i]['qid']
-        retrieved_docs['did'] = retrieved_docs['did'].apply(lambda x: mapper[x])
-        run.append(retrieved_docs)
-
-    run = pd.concat(run)
-
-    print(run)
+    return out

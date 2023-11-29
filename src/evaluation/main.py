@@ -28,14 +28,14 @@ def main():
     for i in range(len(list_of_dataset_queries)):
         queries_retrieved = pd.read_csv(dataset_path + list_of_dataset_queries[i], sep=",")
         #get columns query_id and type of query: original_query,obfuscated_query_distance,obfuscated_query_angle,obfuscated_query_product
-        type_of_query = 'original_query'
+        type_of_query = 'obfuscated_query_product'
         queries_retrieved = queries_retrieved[['query_id', type_of_query]]
         df_to_evaluate = search_faiss(queries_retrieved, 'contriever', type_of_query, k=1000, i=i)
 
         #print(df_to_evaluate.head())
         #print(df_to_evaluate.shape)
 
-        df_to_evaluate.to_csv('df_to_evaluate.csv', index=False, header=True, sep=',')
+        df_to_evaluate.to_csv('df_containing_ranks_dataset_{}.csv'.format(list(list_of_dataset_queries)[i]), index=False, header=True, sep=',')
 
         #run.columns = ['query_id', 'Q0', 'doc_id', 'rank', 'score', 'run_name']
         df_to_evaluate.query_id = df_to_evaluate.query_id.astype(str)
@@ -58,7 +58,7 @@ def main():
         out = pd.DataFrame(iter_calc(measures, qrels, df_to_evaluate))
         out['measure'] = out['measure'].astype(str)
         out = out.pivot(index='query_id', columns='measure', values='value').reset_index()
-        out.to_csv('path_to_save_results.csv', index=False, header=True, sep=',')
+        out.to_csv('nDCG@10_dataset_{}.csv'.format(list(list_of_dataset_queries)[i]), index=False, header=True, sep=',')
 
         print('Mean nDCG@10 for dataset {}: {:.2f}%'.format(i, out['nDCG@10'].mean() * 100))
 
