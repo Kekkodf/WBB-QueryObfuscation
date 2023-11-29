@@ -60,7 +60,7 @@ def main():
     distribution = ('gamma', (1, 2)) #(name, param_1, ..., param_n)
 
     with Pool(3) as p:
-        for n in range(k,n):
+        for n in range(k,n+k+1):
         #for n in range(k+1, k+11):
         #OBFUSCATION PARAMS
             print('------------------------------------------')

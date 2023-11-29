@@ -32,12 +32,8 @@ def main():
         queries_retrieved = queries_retrieved[['query_id', type_of_query]]
         df_to_evaluate = search_faiss(queries_retrieved, 'contriever', type_of_query, k=1000, i=i)
 
-        #print(df_to_evaluate.head())
-        #print(df_to_evaluate.shape)
+        #df_to_evaluate.to_csv('df_containing_ranks_dataset_{}.csv'.format(list(list_of_dataset_queries)[i]), index=False, header=True, sep=',')
 
-        df_to_evaluate.to_csv('df_containing_ranks_dataset_{}.csv'.format(list(list_of_dataset_queries)[i]), index=False, header=True, sep=',')
-
-        #run.columns = ['query_id', 'Q0', 'doc_id', 'rank', 'score', 'run_name']
         df_to_evaluate.query_id = df_to_evaluate.query_id.astype(str)
         df_to_evaluate.did = df_to_evaluate.did.astype(str)
         #rename did to doc_id
@@ -46,7 +42,7 @@ def main():
         #get qrels
         qrels = dataset.qrels_iter()
         qrels = pd.DataFrame(qrels)
-        qrels.to_csv('qrels.csv', index=False, header=True, sep=',')
+        #qrels.to_csv('qrels.csv', index=False, header=True, sep=',')
         qrels.columns = ['query_id', 'doc_id', 'relevance', 'type']
         qrels.query_id = qrels.query_id.astype(str)
         qrels.doc_id = qrels.doc_id.astype(str)
@@ -58,7 +54,7 @@ def main():
         out = pd.DataFrame(iter_calc(measures, qrels, df_to_evaluate))
         out['measure'] = out['measure'].astype(str)
         out = out.pivot(index='query_id', columns='measure', values='value').reset_index()
-        out.to_csv('nDCG@10_dataset_{}.csv'.format(list(list_of_dataset_queries)[i]), index=False, header=True, sep=',')
+        #out.to_csv('nDCG@10_dataset_{}.csv'.format(list(list_of_dataset_queries)[i]), index=False, header=True, sep=',')
 
         print('Mean nDCG@10 for dataset {}: {:.2f}%'.format(i, out['nDCG@10'].mean() * 100))
 
