@@ -60,7 +60,7 @@ def main():
     distribution = ('gamma', (1, 2)) #(name, param_1, ..., param_n)
 
     with Pool(3) as p:
-        for i in range(100):
+        for i in range(94, 100):
             print('------------------------------------------')
             print('Dataset: {} creation.'.format(i))
         #OBFUSCATION PARAMS
@@ -82,6 +82,7 @@ def main():
     
             #obfuscate query
             print('Distance: Obfuscation started...')
+            t_0 = time.time()
             df['obfuscated_query_distance'] = query_df.apply(obf.obfuscate, args=(model, k, n, distribution, 'distance'))
             print('Finished obfuscation distance based in {:.2f} s.'.format(time.time()-t_0))
             t_0 = time.time()
