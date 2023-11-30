@@ -1,9 +1,8 @@
 import pandas as pd
 import numpy as np
 import ir_datasets
-from ir_measures import nDCG
 from index_and_retrieve import search_faiss
-from evaluate import compute_measure, iter_calc
+from ir_measures import AP, nDCG, P, R, iter_calc
 import os
 from tqdm import tqdm
 tqdm.pandas()
@@ -15,7 +14,7 @@ collections = {'robust04': 'disks45/nocr/trec-robust-2004',
 
 
 dataset = ir_datasets.load(collections['msmarco-passage'])
-measures = [nDCG @ 10]
+measures = [nDCG@10]
 dataset_path = './results/pipeline/'
 
 def main():
@@ -56,7 +55,7 @@ def main():
         out = out.pivot(index='query_id', columns='measure', values='value').reset_index()
         #out.to_csv('nDCG@10_dataset_{}.csv'.format(list(list_of_dataset_queries)[i]), index=False, header=True, sep=',')
 
-        print('Mean nDCG@10 for dataset {}: {:.2f}%'.format(i, out['nDCG@10'].mean() * 100))
+        print('Mean nDCG@10 for dataset {}: {:.2f}%'.format(i, out['nDCG@10'].mean()*100))
 
 
 if __name__ == '__main__':

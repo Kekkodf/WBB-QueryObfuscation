@@ -56,12 +56,13 @@ def main():
     #parameters required for obfuscation
     t_0, t_0_0 = time.time(), time.time()
     k = 3 #size of safe_box, default = 3
-    n = 10 #size of candidates_box, default = 10
+    n = 8 #size of candidates_box, default = 10
     distribution = ('gamma', (1, 2)) #(name, param_1, ..., param_n)
 
     with Pool(3) as p:
-        for n in range(k,n+k+1):
-        #for n in range(k+1, k+11):
+        for i in range(100):
+            print('------------------------------------------')
+            print('Dataset: {} creation.'.format(i))
         #OBFUSCATION PARAMS
             print('------------------------------------------')
             print('Parameters:')
@@ -91,7 +92,7 @@ def main():
             df.insert(0, 'query_id', query_id)
             print('Finished obfuscation product based in {:.2f} s.'.format(time.time()-t_0))
             #save df
-            df.to_csv('./results/pipeline/obfuscated_queries_{k}_{n}_{distribution}.csv'.format(k=k, n=n, distribution=distribution), index=False, header=True)
+            df.to_csv('./data/obfuscated-queries_{k}_{n}_{distribution}_{i}.csv'.format(k=k, n=n, distribution=distribution, i=i), index=False, header=True)
     
             query_df = pd.DataFrame(list(dataset.queries_iter()))
             query_df = query_df[['text']]
