@@ -1,5 +1,6 @@
 import pandas as pd
 import numpy as np
+import logging
 import ir_datasets
 from index_and_retrieve import search_faiss
 from ir_measures import AP, nDCG, P, R, iter_calc
@@ -22,7 +23,7 @@ dataset_path = './data/'
 
 def main():
     #define dataset via parameters of obfuscation
-    k = 3
+    k = 4
     n = 8
     distribution = ('gamma', (1, 2)) #(name, param_1, ..., param_n)
     collection = 'msmarco-passage'
