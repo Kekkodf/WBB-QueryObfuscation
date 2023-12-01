@@ -2,7 +2,7 @@ import pandas as pd
 import os
 
 path_to_datasets = './data/'
-path_to_results = './data/'
+path_to_results = './data/final/'
 
 #read all csv files in path_to_datasets
 list_of_datasets = [dataset for dataset in os.listdir(path_to_datasets) if dataset.endswith('.csv')]
@@ -15,7 +15,7 @@ df = df.sort_values(by=['query_id'])
 df = df.reset_index(drop=True)
 
 #define obfuscation parameters
-k = 3
+k = 5
 n = 8
 distribution = ('gamma', (1, 2)) #(name, param_1, ..., param_n)
 collection = 'msmarco-passage'
