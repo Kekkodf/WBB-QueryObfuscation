@@ -55,8 +55,8 @@ def obfuscate_parallelize(i):
     #define obfuscation parameters
     #parameters required for obfuscation
     t_0, t_0_0 = time.time(), time.time()
-    k = 5 #size of safe_box, default = 3
-    n = 8 #size of candidates_box, default = 10
+    k = 4 #size of safe_box, default = 3
+    n = 6 #size of candidates_box, default = 10
     distribution = ('gamma', (1, 2)) #(name, param_1, ..., param_n)
 
     #with Pool(3) as p:
@@ -100,6 +100,8 @@ def main(i):
     
 if __name__ == '__main__':
     t_0 = time.time()
+    #with Pool() as p:
+    #    p.map(main, [i for i in range(0, 50)])
     with Pool() as p:
-        p.map(main, [i for i in range(50)])
+        p.map(main, [i for i in range(50, 100)])
     print('Finished in {:.2f} s.'.format(time.time()-t_0))

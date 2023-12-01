@@ -15,8 +15,8 @@ df = df.sort_values(by=['query_id'])
 df = df.reset_index(drop=True)
 
 #define obfuscation parameters
-k = 5
-n = 8
+k = 4
+n = 6
 distribution = ('gamma', (1, 2)) #(name, param_1, ..., param_n)
 collection = 'msmarco-passage'
 
