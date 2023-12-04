@@ -11,8 +11,21 @@ from tqdm import tqdm
 from multiprocessing import Pool
 tqdm.pandas()
 import WordEmbeddings as we
+import os
 
-glove, vocab = pre.model(dimension = 300)
+path = './data/'
+
+#glove, vocab = pre.model(dimension = 300)
+def initialize_glove_optimized():
+    with open(path + 'glove.txt', 'r', encoding='utf-8') as f:
+        glove = f.readlines()
+    glove = [line.strip().split(' ') for line in tqdm(glove)]
+    vocab = [word[0] for word in glove]
+    glove = {word[0]: np.array(word[1:], dtype=np.float32) for word in tqdm(glove)}
+    return glove, vocab
+
+glove, vocab = initialize_glove_optimized()
+
 model = we.WordEmbeddings(glove, vocab)
 #get query
 dataset = ir_datasets.load("msmarco-passage/trec-dl-2019/judged")
@@ -100,8 +113,8 @@ def main(i):
     
 if __name__ == '__main__':
     t_0 = time.time()
-    #with Pool() as p:
-    #    p.map(main, [i for i in range(0, 50)])
     with Pool() as p:
-        p.map(main, [i for i in range(50, 100)])
+        p.map(main, [i for i in range(0, 50)])
+    #with Pool() as p:
+    #    p.map(main, [i for i in range(50, 100)])
     print('Finished in {:.2f} s.'.format(time.time()-t_0))

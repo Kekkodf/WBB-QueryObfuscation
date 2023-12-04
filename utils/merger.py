@@ -20,6 +20,6 @@ n = 6
 distribution = ('gamma', (1, 2)) #(name, param_1, ..., param_n)
 collection = 'msmarco-passage'
 
-dataset_name = 'dataset-{k}-{n}_{distribution}_{collection}.csv'.format(k=k, n=n, distribution=distribution, collection=collection)
+dataset_name = 'dataset-counterFitting-{k}-{n}_{distribution}_{collection}.csv'.format(k=k, n=n, distribution=distribution, collection=collection)
 #save merged dataset
 df.to_csv(path_to_results + dataset_name, index=False, header=True, sep=',')
