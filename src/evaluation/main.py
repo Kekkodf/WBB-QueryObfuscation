@@ -15,7 +15,17 @@ collections = {'robust04': 'disks45/nocr/trec-robust-2004',
 
 dataset = ir_datasets.load(collections['msmarco-passage'])
 measures = [nDCG@10]
-dataset_path = './results/pipeline/'
+dataset_path = './data/final/'
+
+k = 4
+n = 6
+distribution = ('gamma', (1, 2)) #(name, param_1, ..., param_n)
+collection = 'msmarco-passage'
+
+dataset_name = 'dataset-{k}-{n}_{distribution}_{collection}.csv'.format(k=k, n=n, distribution=distribution, collection=collection)
+
+#read the dataset
+query_dataset = pd.read_csv(dataset_path + dataset_name, sep=",")
 
 def main():
     #get list of dataset available

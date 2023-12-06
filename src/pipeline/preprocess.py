@@ -1,7 +1,10 @@
 import gensim.downloader as api
 import nltk
+import numpy as np
+from tqdm import tqdm
 #nltk.download('punkt')
 #nltk.download('averaged_perceptron_tagger')
+path = './data/embeddings/'
 
 def model(dimension):
     if dimension == 50:
@@ -49,3 +52,30 @@ def tokenize_query(query):
 #
 def get_POS_tags(query):
     return nltk.pos_tag(query)
+
+def initialize_glove_optimized(optimization = False):
+    if optimization == True:
+        with open(path + 'glove.6B.300d.txt', 'r', encoding='utf-8') as f:
+            glove_normal = f.readlines()
+        with open(path + 'glove_counterFitt.txt', 'r', encoding='utf-8') as f:
+            glove_optimal = f.readlines()
+        glove_normal = [line.strip().split(' ') for line in tqdm(glove_normal)]
+        glove_optimal = [line.strip().split(' ') for line in tqdm(glove_optimal)]
+        vocab_normal = [word[0] for word in glove_normal]
+        vocab_optimal = [word[0] for word in glove_optimal]
+        glove_normal = {word[0]: np.array(word[1:], dtype=np.float32) for word in tqdm(glove_normal)}
+        glove_optimal = {word[0]: np.array(word[1:], dtype=np.float32) for word in tqdm(glove_optimal)}
+        #substitute the optimal embeddings to the normal ones
+        for word in tqdm(vocab_optimal):
+            if word in vocab_normal:
+                glove_normal[word] = glove_optimal[word]
+        return glove_normal, vocab_normal
+    elif optimization == False:
+        with open(path + 'glove.6B.300d.txt', 'r', encoding='utf-8') as f:
+            glove = f.readlines()
+        glove = [line.strip().split(' ') for line in tqdm(glove)]
+        vocab = [word[0] for word in glove]
+        glove = {word[0]: np.array(word[1:], dtype=np.float32) for word in tqdm(glove)}
+        return glove, vocab
+    else:
+        raise ValueError('optimization must be True or False')
