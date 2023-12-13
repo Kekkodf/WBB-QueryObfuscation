@@ -1,7 +1,6 @@
 import pandas as pd
 import faiss
 from sentence_transformers import SentenceTransformer
-import ir_datasets
 import numpy as np
 from tqdm import tqdm
 tqdm.pandas()
@@ -11,7 +10,7 @@ m2hf = {"tasb": 'sentence-transformers/msmarco-distilbert-base-tas-b',
         "contriever": "facebook/contriever-msmarco",
         "ance": 'sentence-transformers/msmarco-roberta-base-ance-firstp'}
 
-def search_faiss(queries, model_name, type_of_obfuscation='original_query', k=1000, i=0):
+def search_faiss(queries, model_name, type_of_obfuscation='original_query', k=100):
     '''
     queries = set of queries to be encoded and searched
     model_name = name of the model to be used

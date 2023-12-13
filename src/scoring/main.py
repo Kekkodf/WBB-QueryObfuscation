@@ -1,63 +1,64 @@
 import pandas as pd
 import numpy as np
-import logging
 import ir_datasets
-from index_and_retrieve import search_faiss
-from ir_measures import AP, nDCG, P, R, iter_calc
-from index_and_retrieve import search_faiss
-import os
-from tqdm import tqdm
-tqdm.pandas()
+from sentence_transformers import SentenceTransformer
+from multiprocessing import Pool
 
-#define possible collections
 collections = {'robust04': 'disks45/nocr/trec-robust-2004',
-               'trec-covid': 'beir/trec-covid',
-               'msmarco-passage': 'msmarco-passage/trec-dl-2019/judged'}
+                'trec-covid': 'beir/trec-covid',
+                'msmarco-passage': 'msmarco-passage/trec-dl-2019/judged'}
 
+m2hf = {"tasb": "sentence-transformers/msmarco-distilbert-base-tas-b",
+        "contriever": "facebook/contriever-msmarco",
+        "ance": "sentence-transformers/msmarco-roberta-base-ance-firstp"}
 #define dataset
-dataset = ir_datasets.load(collections['msmarco-passage'])
-#define scoring measures
-measures = [AP]
-#define path to dataset
-dataset_path = './data/'
+
+# Global variables
+model = m2hf["contriever"]  # Your model for similarity computation
+query_dataset_path = './data/dataset_obfuscation.csv'  # Your dataset of queries
+document_collection = collections['msmarco-passage']  # Your collection of documents
+
+def compute_similarity(query, documents):
+    # Your code to compute dot product or other similarity measure
+    return np.dot(query, documents)
+
+def process_chunk(chunk):
+    return chunk.apply(lambda row: compute_similarity(row['query'], row['documents']), axis=1)
 
 def main():
-    #define dataset via parameters of obfuscation
-    k = 4
-    n = 8
-    distribution = ('gamma', (1, 2)) #(name, param_1, ..., param_n)
-    collection = 'msmarco-passage'
-    model = 'contriever'
-    #read the dataset
-    dataset_name = 'dataset-{k}-{n}_{distribution}_{collection}.csv'.format(k=k, n=n, distribution=distribution, collection=collection)
-    query_dataset = pd.read_csv(dataset_path + dataset_name, sep=",")
-    #define list of possible obfuscation: original_query,obfuscated_query_distance,obfuscated_query_angle,obfuscated_query_product
-    list_of_types_of_obfuscation = ['original_query', 'obfuscated_query_distance', 'obfuscated_query_angle', 'obfuscated_query_product']
-    for type_of_query in list_of_types_of_obfuscation:
-        #evaluation
-        queries_retrieved = query_dataset[['query_id', type_of_query]]
-        #use faiss indices to retrieve documents
-        df_to_evaluate = search_faiss(queries_retrieved, model, type_of_query, k=1000)
-        df_to_evaluate.query_id = df_to_evaluate.query_id.astype(str)
-        df_to_evaluate.did = df_to_evaluate.did.astype(str)
-        #rename did to doc_id
-        df_to_evaluate.rename(columns={'did': 'doc_id'}, inplace=True)
-        #get qrels
-        qrels = dataset.qrels_iter()
-        qrels = pd.DataFrame(qrels)
-        #qrels.to_csv('qrels.csv', index=False, header=True, sep=',')
-        qrels.columns = ['query_id', 'doc_id', 'relevance', 'type']
-        qrels.query_id = qrels.query_id.astype(str)
-        qrels.doc_id = qrels.doc_id.astype(str)
-        #filter query_id and keep only the ones in qrels
-        df_to_evaluate = df_to_evaluate[df_to_evaluate['query_id'].isin(qrels['query_id'])]
+    global model, query_dataset, document_collection
 
-        #compute measure
-        out = pd.DataFrame(iter_calc(measures, qrels, df_to_evaluate))
-        out['measure'] = out['measure'].astype(str)
-        out = out.pivot(index='query_id', columns='measure', values='value').reset_index()
-        
-        print('Mean {} for dataset {}, {}: {:.2f}%'.format(measures[0], dataset_name, type_of_query, out['{}'.format(measures[0])].mean()*100))
+    k = 100
+    # Initialize your model and load data
+    model = SentenceTransformer(model)  # Implement this function to initialize your model
+    query_dataset = pd.read_csv(query_dataset_path, sep = ',', header=0) # Implement this function to load your query dataset
+    query_dataset['query'] = query_dataset['obfuscated_query_distance'].apply(model.encode)  # Implement this function to vectorize your queries
 
-if __name__ == '__main__':
+    document_collection = ir_datasets.load(document_collection)  # Implement this function to load your document collection
+    document_collection = pd.DataFrame(list(document_collection.docs_iter()), columns=['common_key_column', 'documents'])  # Implement this function to convert your document collection into a DataFrame
+
+    # Vectorize documents
+    document_collection['documents'] = document_collection['documents'].apply(model.encode)
+
+    # Combine queries and documents into a single DataFrame
+    data = pd.merge(query_dataset, document_collection, on='common_key_column')
+
+    # Split data into chunks
+    num_processes = 35
+    chunks = np.array_split(data, num_processes)
+
+    # Use multiprocessing to parallelize the computation
+    with Pool(num_processes) as pool:
+        results = pool.map(process_chunk, chunks)
+
+    # Combine results into a single DataFrame
+    final_result = pd.concat(results)
+
+    # Get the top most similar documents for each query
+    top_similar_documents = final_result.groupby('query_index').apply(lambda group: group.nlargest(k, 'similarity'))
+
+    # Save the results
+    top_similar_documents.to_csv('./data/top_1000_documents.csv', index=False)
+
+if __name__ == "__main__":
     main()
