@@ -1,4 +1,0 @@
-lymphoma.n.01 None
-leukemia.n.01 None
-carcinoma.n.01 None
-sarcoma.n.01 None

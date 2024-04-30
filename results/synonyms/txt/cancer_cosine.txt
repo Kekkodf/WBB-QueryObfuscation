@@ -1,5 +1,0 @@
-Cancer_the_Crab None
-Crab None
-Cancer None
-malignant_neoplastic_disease None
-genus_Cancer None

@@ -1,7 +1,0 @@
-medication 0.6609676480293274
-practice_of_medicine None
-music 0.41527238488197327
-medicinal_drug None
-medicate 0.16414617002010345
-medical_specialty None
-medicament None
