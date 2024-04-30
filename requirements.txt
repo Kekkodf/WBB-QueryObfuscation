@@ -1,6 +1,7 @@
 datasets
 gensim
 ir-datasets
+ir-measures
 matplotlib
 matplotlib-inline
 nltk
@@ -9,3 +10,9 @@ pandas
 scikit-learn
 scipy
 seaborn
+python-terrier
+transformers
+torch
+faiss-cpu
+sentence-transformers
+python-terrier
