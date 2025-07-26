@@ -1,4 +1,4 @@
-# Words Blending Boxes (WBB) – Differentially Private Query Obfuscation 📦
+# Words Blending Boxes (WBB) – Obfuscating Queries in Information Retrieval using Differential Privacy 📦
 
 **Words Blending Boxes (WBB)** is a novel mechanism to obfuscate natural‑language queries under **ε‑Differential Privacy**, designed specifically for non‑cooperative information retrieval (IR) systems. WBB ensures both **formal privacy guarantees** and **practical obfuscation** by excluding semantically similar words from candidate sets, while still preserving retrieval utility.
 
